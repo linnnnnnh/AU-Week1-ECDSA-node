@@ -59,6 +59,7 @@ input {
   letter-spacing: 1px;
   font-weight: 400;
   font-size: .9em;
+
   &:hover {
     cursor: pointer;
   }
@@ -83,4 +84,12 @@ input {
 .transfer {
   display: flex;
   flex-direction: column;
+
+  .small-button {
+    background-color: #007bff8c;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+  }
 }

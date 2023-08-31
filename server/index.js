@@ -2,14 +2,17 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3042;
+const { keccak256 } = require("ethereum-cryptography/keccak");
+const { toHex } = require("ethereum-cryptography/utils");
 
 app.use(cors());
 app.use(express.json());
 
+//also store the address + amounts on the server side:
 const balances = {
-  "0x1": 100,
+  "9b862c8aed6d056c951eab8b192a36c27c149147": 100,
+  "0x1": 10,
   "0x2": 50,
-  "0x3": 75,
 };
 
 app.get("/balance/:address", (req, res) => {
@@ -19,10 +22,19 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { sender, recipient, amount, hashedmsg, sig } = req.body;
 
-  setInitialBalance(sender);
-  setInitialBalance(recipient);
+  //get public key and address from signature:
+  const pubKey = sig.recoverPublicKey(hashedmsg);
+  const verifiedAddress = toHex(keccak256(pubKey.slice(1)).slice(-20));
+
+  if (sender !== verifiedAddress) {
+    res.status(400).send({ message: "Wrong signature!" });
+    return;
+  } else {
+    setInitialBalance(sender);
+    setInitialBalance(recipient);
+  }
 
   if (balances[sender] < amount) {
     res.status(400).send({ message: "Not enough funds!" });

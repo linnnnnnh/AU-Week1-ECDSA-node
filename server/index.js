@@ -2,8 +2,11 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3042;
-const { keccak256 } = require("ethereum-cryptography/keccak");
+// const { keccak256 } = require("ethereum-cryptography/keccak");
 const { toHex } = require("ethereum-cryptography/utils");
+const { secp256k1 } = require('@noble/curves/secp256k1');
+// const { secp } = require("ethereum-cryptography/secp256k1");
+
 
 app.use(cors());
 app.use(express.json());
@@ -22,13 +25,17 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount, hashedmsg, sig } = req.body;
+  const { sender, recipient, amount, hashmsg, sig } = req.body;
 
   //get public key and address from signature:
-  const pubKey = sig.recoverPublicKey(hashedmsg);
-  const verifiedAddress = toHex(keccak256(pubKey.slice(1)).slice(-20));
 
-  if (sender !== verifiedAddress) {
+  const initialSig = secp256k1.Signature.fromCompact(sig);
+  initialSig.recovery = 0;
+  const pubKeyPoint = initialSig.recoverPublicKey(hashmsg);
+  const pubKey = new secp256k1.ProjectivePoint(pubKeyPoint.px, pubKeyPoint.py, pubKeyPoint.pz);
+  const isValid = secp256k1.verify(sig, hashmsg, pubKey.toRawBytes());
+
+  if (!isValid) {
     res.status(400).send({ message: "Wrong signature!" });
     return;
   } else {

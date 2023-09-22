@@ -42,9 +42,6 @@ function Transfer({ address, setBalance }) {
   function handleSignNow() {
     const signature = signMessage(message, address);
     setSignature(signature);
-    // signature.r = BigInt(signature.r).toString();
-    // signature.s = BigInt(signature.s).toString();
-    // signature.recovery = signature.recovery;
   };
 
   async function transfer(evt) {
@@ -59,11 +56,11 @@ function Transfer({ address, setBalance }) {
         recipient,
         hashmsg: hashMessage(message),
         sig: signature.toCompactHex(),
+        rec: signature.recovery,
       });
       setBalance(balance);
     } catch (ex) {
       console.dir(ex);
-      // alert(ex.response.data.message);
     }
   }
 
